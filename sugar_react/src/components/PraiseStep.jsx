@@ -17,7 +17,7 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
 
     const fetchStampCount = async () => {
         try {
-            const res = await fetch(`https://logos.koreanok.com/api/records/my-summary?user_type=korean`, {
+            const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=korean`, {
                 headers: { 
                     'Authorization': `Bearer ${token || 'GUEST_TOKEN'}`,
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -56,7 +56,7 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
 
     const fetchPastScores = async () => {
         try {
-            const res = await fetch(`https://logos.koreanok.com/api/records/my-summary?user_type=${userType}`, {
+            const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=${userType}`, {
                 headers: { 
                     'Authorization': `Bearer ${token || 'GUEST_TOKEN'}`,
                     'Cache-Control': 'no-cache, no-store, must-revalidate',

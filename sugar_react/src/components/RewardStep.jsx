@@ -16,7 +16,7 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
 
     const fetchStampCount = async () => {
         try {
-            const res = await fetch(`https://logos.koreanok.com/api/records/my-summary?user_type=korean`, {
+            const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=korean`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('sugar_token') || 'GUEST_TOKEN'}` }
             });
             if (res.ok) {

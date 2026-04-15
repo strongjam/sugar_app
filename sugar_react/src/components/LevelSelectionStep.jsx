@@ -43,7 +43,7 @@ const LevelSelectionStep = ({ onSelect, onBack }) => {
 
     return (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <header style={{ marginBottom: '3vh' }}>
+            <header style={{ marginBottom: '2vh' }}>
                 <h1>Sugar logos</h1>
                 <p className="subtitle">난이도를 선택해 주세요</p>
                 <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '4px' }}>
@@ -61,56 +61,50 @@ const LevelSelectionStep = ({ onSelect, onBack }) => {
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '20px',
-                            padding: '20px 24px',
+                            gap: '24px',
+                            padding: '28px 28px',
                             transition: 'transform 0.2s, box-shadow 0.2s',
-                            border: `2px solid ${color}20`,
+                            border: `2px solid ${color}40`,
+                            background: bgColor,
                         }}
                     >
                         <div style={{
-                            width: '60px',
-                            height: '60px',
+                            width: '80px',
+                            height: '80px',
                             borderRadius: '50%',
-                            background: bgColor,
+                            background: 'white',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '1.8rem',
+                            fontSize: '2.4rem',
                             flexShrink: 0,
+                            boxShadow: `0 4px 12px ${color}30`,
                         }}>
                             {icon}
                         </div>
                         <div style={{ flex: 1, textAlign: 'left' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '1.2rem', fontWeight: '800', color }}>Level {level}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '1.6rem', fontWeight: '800', color }}>Level {level}</span>
                                 <span style={{
                                     background: color,
                                     color: 'white',
                                     borderRadius: '20px',
-                                    padding: '2px 10px',
-                                    fontSize: '0.75rem',
+                                    padding: '3px 12px',
+                                    fontSize: '0.85rem',
                                     fontWeight: 'bold',
                                 }}>
                                     {label} · {labelKo}
                                 </span>
                             </div>
-                            <p style={{ color: '#555', fontSize: '0.9rem', margin: 0 }}>{desc}</p>
-                            <p style={{ color: '#aaa', fontSize: '0.78rem', margin: '2px 0 0 0' }}>{descKo}</p>
+                            <p style={{ color: '#444', fontSize: '1rem', margin: 0, fontWeight: '500' }}>{desc}</p>
+                            <p style={{ color: '#888', fontSize: '0.85rem', margin: '4px 0 0 0' }}>{descKo}</p>
                         </div>
-                        <ArrowRight size={20} color={color} />
+                        <ArrowRight size={28} color={color} />
                     </div>
                 ))}
             </div>
 
-            <div style={{ marginTop: '24px', textAlign: 'left' }}>
-                <button
-                    className="num-btn special"
-                    style={{ width: '180px', height: '50px' }}
-                    onClick={onBack}
-                >
-                    <ArrowLeft size={18} style={{ marginRight: '8px' }} /> 이전으로 (Back)
-                </button>
-            </div>
+
 
             <style dangerouslySetInnerHTML={{ __html: `
                 .mission-card:hover {

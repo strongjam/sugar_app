@@ -45,7 +45,7 @@ function App() {
 
   const checkAlreadySucceeded = async (activeToken, activeUserType) => {
     try {
-        const res = await fetch(`https://logos.koreanok.com/api/records/my-summary?user_type=${activeUserType}`, {
+        const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=${activeUserType}`, {
             headers: { 
                 'Authorization': `Bearer ${activeToken}`,
                 'Cache-Control': 'no-cache'
@@ -148,7 +148,7 @@ function App() {
     }
 
     try {
-      await fetch('https://logos.koreanok.com/api/records', {
+      await fetch('https://logos.app.koreanok.com/api/records', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

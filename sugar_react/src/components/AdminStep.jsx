@@ -13,7 +13,7 @@ const AdminStep = ({ token, onLogout }) => {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('https://logos.koreanok.com/api/admin/users', {
+            const res = await fetch('https://logos.app.koreanok.com/api/admin/users', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -34,7 +34,7 @@ const AdminStep = ({ token, onLogout }) => {
         
         SFX.play('click');
         try {
-            const res = await fetch(`https://logos.koreanok.com/api/admin/users/${username}?user_type=${user_type}`, {
+            const res = await fetch(`https://logos.app.koreanok.com/api/admin/users/${username}?user_type=${user_type}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

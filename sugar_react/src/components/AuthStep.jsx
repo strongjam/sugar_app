@@ -10,7 +10,7 @@ const AuthStep = ({ onAuthSuccess, onBack, userType, pendingRamen }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
-    const API_BASE = 'https://logos.koreanok.com/api'; // Use absolute URL for production
+    const API_BASE = 'https://logos.app.koreanok.com/api'; // Use absolute URL for production
 
     const handleSubmit = async (e) => {
         e.preventDefault();
