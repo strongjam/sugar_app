@@ -1,0 +1,13 @@
+node_modules/
+backups/
+.DS_Store
+*.log
+.env
+dist/
+build/
+.vscode/
+.idea/
+database.sqlite
+backend/database.sqlite
+backend/*.db
+backend/*.sqlite
