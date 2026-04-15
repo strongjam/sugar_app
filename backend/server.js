@@ -16,50 +16,61 @@ const dbPath = path.join(__dirname, 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-    // Migration: Transform users table to composite PK (username, user_type)
-    db.get("PRAGMA table_info(users)", (err, row) => {
-        // Check if user_type exists and is part of PK
-        db.all("PRAGMA table_info(users)", (err, columns) => {
-            const hasUserType = columns.some(c => c.name === 'user_type');
-            const pkCount = columns.filter(c => c.pk > 0).length;
-            
-            if (!hasUserType || pkCount < 2) {
-                console.log("Migration: Upgrading users table to support composite PK (username, user_type)...");
-                db.serialize(() => {
-                    db.run("BEGIN TRANSACTION");
-                    // 1. Create new table with correct schema
-                    db.run(`CREATE TABLE users_new (
-                        username TEXT,
-                        user_type TEXT,
-                        password TEXT NOT NULL,
-                        is_admin INTEGER DEFAULT 0,
-                        student_id TEXT,
-                        created_at TEXT,
-                        PRIMARY KEY (username, user_type)
-                    )`);
-                    
-                    // 2. Copy existing data (defaulting old users to 'foreigner' unless they are admin)
-                    db.run(`INSERT INTO users_new (username, user_type, password, is_admin, student_id, created_at)
-                            SELECT username, 
-                                   CASE WHEN is_admin = 1 THEN 'admin' ELSE 'foreigner' END, 
-                                   password, is_admin, student_id, created_at 
-                            FROM users`);
-                    
-                    // 3. Drop old and rename new
-                    db.run("DROP TABLE users");
-                    db.run("ALTER TABLE users_new RENAME TO users");
-                    db.run("COMMIT", (err) => {
-                        if (err) console.error("Migration Failed:", err);
-                        else {
-                            console.log("Migration: users table successfully upgraded.");
-                            syncAdmin();
-                        }
-                    });
+    // Step 1: Always ensure base tables exist first
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY,
+        user_type TEXT DEFAULT 'foreigner',
+        password TEXT NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        student_id TEXT,
+        created_at TEXT
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        student_id TEXT,
+        score INTEGER,
+        ramen_type TEXT,
+        user_type TEXT,
+        created_at TEXT
+    )`);
+
+    // Step 2: Migration to composite PK (username, user_type) if needed
+    db.all("PRAGMA table_info(users)", (err, columns) => {
+        if (err || !columns) return syncAdmin();
+        const hasUserType = columns.some(c => c.name === 'user_type');
+        const pkCount = columns.filter(c => c.pk > 0).length;
+
+        if (!hasUserType || pkCount < 2) {
+            console.log("Migration: Upgrading users table to composite PK...");
+            db.serialize(() => {
+                db.run("BEGIN TRANSACTION");
+                db.run(`CREATE TABLE IF NOT EXISTS users_new (
+                    username TEXT,
+                    user_type TEXT,
+                    password TEXT NOT NULL,
+                    is_admin INTEGER DEFAULT 0,
+                    student_id TEXT,
+                    created_at TEXT,
+                    PRIMARY KEY (username, user_type)
+                )`);
+                db.run(`INSERT OR IGNORE INTO users_new (username, user_type, password, is_admin, student_id, created_at)
+                        SELECT username,
+                               CASE WHEN is_admin = 1 THEN 'admin' ELSE 'foreigner' END,
+                               password, is_admin, student_id, created_at
+                        FROM users`);
+                db.run("DROP TABLE users");
+                db.run("ALTER TABLE users_new RENAME TO users");
+                db.run("COMMIT", (err) => {
+                    if (err) console.error("Migration Failed:", err);
+                    else console.log("Migration: users table upgraded.");
+                    syncAdmin();
                 });
-            } else {
-                syncAdmin();
-            }
-        });
+            });
+        } else {
+            syncAdmin();
+        }
     });
 
     function syncAdmin() {
@@ -69,6 +80,7 @@ db.serialize(() => {
         console.log("Admin account synchronized: manager / 1234");
     }
 });
+
 
 // Middleware for JWT Verification
 function authenticateToken(req, res, next) {
