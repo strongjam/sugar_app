@@ -11,7 +11,7 @@ SSH_ALIAS="jamss"
 REMOTE_PATH="/var/www/sugar-app"
 NGINX_CONF="/etc/nginx/sites-available/sugar-app"
 NGINX_LINK="/etc/nginx/sites-enabled/sugar-app"
-DOMAIN="sugar.app.koreanok.com"
+DOMAIN="logos.app.koreanok.com"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$SCRIPT_DIR/sugar_react"
 BACKEND_DIR="$SCRIPT_DIR/backend"
@@ -101,7 +101,7 @@ ssh $SSH_ALIAS << 'ENDSSH'
             sudo apt update && sudo apt install -y certbot python3-certbot-nginx
         fi
     fi
-    sudo certbot --nginx -d sugar.app.koreanok.com --non-interactive --agree-tos -m admin@koreanok.com --redirect
+    sudo certbot --nginx -d logos.app.koreanok.com --non-interactive --agree-tos -m admin@koreanok.com --redirect
 ENDSSH
 
 echo ""

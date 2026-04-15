@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import SelectionStep from './components/SelectionStep';
 import AuthStep from './components/AuthStep';
 import AdminStep from './components/AdminStep';
 import EntryStep from './components/EntryStep';
@@ -9,13 +8,14 @@ import PraiseStep from './components/PraiseStep';
 import LevelSelectionStep from './components/LevelSelectionStep';
 
 function App() {
-  const [step, setStep] = useState(localStorage.getItem('sugar_token') ? (localStorage.getItem('sugar_is_admin') === 'true' ? -2 : 1) : -3); 
-  // -3: Selection, -2: Admin, -1: Auth, 0: Entry, 1: Recital, 2: Reward, 3: Praise
+  // Step: -4: LevelSelection, -2: Admin, -1: Auth, 1: Recital, 2: Reward, 3: Praise
+  const [step, setStep] = useState(localStorage.getItem('sugar_token') ? (localStorage.getItem('sugar_is_admin') === 'true' ? -2 : 1) : -4);
   
   const [user, setUser] = useState(localStorage.getItem('sugar_user_name') || '');
   const [token, setToken] = useState(localStorage.getItem('sugar_token') || '');
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('sugar_is_admin') === 'true');
-  const [userType, setUserType] = useState(localStorage.getItem('sugar_user_type') || '');
+  // userType is always 'foreigner'
+  const [userType] = useState('foreigner');
   const [studentId, setStudentId] = useState('');
   const [score, setScore] = useState(0);
   const [pendingRamen, setPendingRamen] = useState(null);
@@ -23,24 +23,6 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const isSubmitting = useRef(false);
-
-  const handleSelection = (type) => {
-    // Clear any previous session state manually (avoid calling handleLogout which calls setStep(-3))
-    localStorage.removeItem('sugar_token');
-    localStorage.removeItem('sugar_user_name');
-    localStorage.removeItem('sugar_is_admin');
-    localStorage.setItem('sugar_user_type', type);
-    setUserType(type);
-    setUser('');
-    setToken('');
-    setIsAdmin(false);
-    // Foreigner goes to level selection first
-    if (type === 'foreigner') {
-        setStep(-4);
-    } else {
-        setStep(1);
-    }
-  };
 
   const handleLevelSelect = (level) => {
     setUserLevel(level);
@@ -123,25 +105,16 @@ function App() {
   const handleRecitalNext = async (finalScore) => {
     setScore(finalScore);
     if (finalScore >= 85) {
-        // If already logged in, check participation first
         if (token) {
             const alreadySucceeded = await checkAlreadySucceeded(token, userType);
             if (alreadySucceeded) {
-                const msg = userType === 'korean' 
-                    ? "이미 오늘 포인트를 받아가셨습니다. 내일 다시 도전해 주세요!" 
-                    : `${user || studentId}님, 오늘은 이미 보상을 수령하셨습니다. (내일 다시 도전해 주세요)`;
+                const msg = `${user || studentId}님, 오늘은 이미 보상을 수령하셨습니다. (내일 다시 도전해 주세요)`;
                 setFinalRewardMessage(msg);
                 handleFinish('NONE', finalScore, token, user || studentId, msg);
                 return;
             }
         }
-
-        if (userType === 'korean') {
-            setPendingRamen('STAMP');
-            setStep(-1);
-        } else {
-            setStep(2);
-        }
+        setStep(2);
     } else {
         setStep(3); 
     }
@@ -167,13 +140,9 @@ function App() {
     const activeToken = overrideToken || token;
     const activeUser = overrideUser || user || studentId;
     let activeRamen = ramen || 'NONE';
-    if (userType === 'korean' && activeScore >= 85) activeRamen = 'STAMP';
     
-    // Set final message if not already set (e.g. for foreigners who were already logged in)
     if (!overrideMsg && !finalRewardMessage) {
-        if (userType === 'korean' && activeScore >= 85) {
-            setFinalRewardMessage(`${activeUser}님, 스템프가 찍혔습니다!🎉`);
-        } else if (activeRamen !== 'NONE' && activeRamen !== 'STAMP') {
+        if (activeRamen !== 'NONE' && activeRamen !== 'STAMP') {
             setFinalRewardMessage(`${activeUser}님, ${activeRamen} 맛있게 드세요!🎉`);
         }
     }
@@ -203,11 +172,10 @@ function App() {
   const handleRestart = () => {
     isSubmitting.current = false; 
     localStorage.clear();
-    setStep(-3);
+    setStep(-4);
     setUser('');
     setToken('');
     setStudentId('');
-    setUserType('');
     setIsAdmin(false);
     setScore(0);
     setPendingRamen(null);
@@ -216,25 +184,23 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
-    setStep(-3);
+    setStep(-4);
     setUser('');
     setToken('');
     setStudentId('');
-    setUserType('');
     setIsAdmin(false);
   };
 
   return (
     <div className="kiosk-container">
-      {step === -3 && <SelectionStep onSelect={handleSelection} />}
-      {step === -4 && <LevelSelectionStep onSelect={handleLevelSelect} onBack={() => setStep(-3)} />}
+      {step === -4 && <LevelSelectionStep onSelect={handleLevelSelect} onBack={null} />}
       {step === -2 && <AdminStep token={token} onLogout={handleLogout} />}
       {step === -1 && (
         <AuthStep 
             userType={userType} 
             pendingRamen={pendingRamen}
             onAuthSuccess={handleAuthSuccess} 
-            onBack={() => setStep(-3)} 
+            onBack={() => setStep(-4)} 
         />
       )}
       {step === 1 && <RecitalStep userType={userType} token={token} userLevel={userLevel} onNext={handleRecitalNext} onBack={() => { handleRestart(); }} />}
