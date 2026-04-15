@@ -22,11 +22,28 @@ function App() {
   const [finalRewardMessage, setFinalRewardMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
+  const [alreadyStamped, setAlreadyStamped] = useState(false);
   const isSubmitting = useRef(false);
 
   const handleLevelSelect = (level) => {
     setUserLevel(level);
     setStep(1);
+  };
+
+  const handleTest = async () => {
+    setUserLevel(1);
+    setScore(90);
+    if (!token) {
+        setAlreadyStamped(false);
+        setStep(2);
+        return;
+    }
+    const alreadySucceeded = await checkAlreadySucceeded(token, userType);
+    setAlreadyStamped(alreadySucceeded);
+    const msg = alreadySucceeded 
+        ? "오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊" 
+        : "오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉";
+    handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', 90, token, user || studentId, msg, true);
   };
 
   useEffect(() => {
@@ -82,20 +99,12 @@ function App() {
       // Check if they already succeeded today
       const alreadySucceeded = await checkAlreadySucceeded(data.token, userType);
       
-      if (pendingRamen) {
-          if (alreadySucceeded) {
-              const msg = userType === 'korean' 
-                ? "이미 오늘 포인트를 받아가셨습니다. 내일 다시 도전해 주세요!" 
-                : `${data.username}님, 오늘은 이미 보상을 수령하셨습니다. (내일 다시 도전해 주세요)`;
-              setFinalRewardMessage(msg);
-              handleFinish('NONE', score, data.token, data.username, msg);
-          } else if (pendingRamen === 'STAMP') {
-              handleFinish(pendingRamen, score, data.token, data.username);
-          } else {
-              const msg = `${data.username}님, '${pendingRamen}' 맛있게 드세요!🎉`;
-              setFinalRewardMessage(msg);
-              handleFinish(pendingRamen, score, data.token, data.username, msg);
-          }
+      if (pendingRamen === 'WANT_REWARD' || pendingRamen === 'STAMP' || pendingRamen === 'AUTO_SAVE_STAMP') {
+          setAlreadyStamped(alreadySucceeded);
+          const msg = alreadySucceeded 
+            ? "오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊" 
+            : "오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉";
+          handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', score, data.token, data.username, msg, true);
       } else {
         setStep(1); 
       }
@@ -105,29 +114,29 @@ function App() {
   const handleRecitalNext = async (finalScore) => {
     setScore(finalScore);
     if (finalScore >= 85) {
-        if (token) {
-            const alreadySucceeded = await checkAlreadySucceeded(token, userType);
-            if (alreadySucceeded) {
-                const msg = `${user || studentId}님, 오늘은 이미 보상을 수령하셨습니다. (내일 다시 도전해 주세요)`;
-                setFinalRewardMessage(msg);
-                handleFinish('NONE', finalScore, token, user || studentId, msg);
-                return;
-            }
+        if (!token) {
+            setAlreadyStamped(false);
+            setStep(2);
+            return;
         }
-        setStep(2);
+
+        const alreadySucceeded = await checkAlreadySucceeded(token, userType);
+        setAlreadyStamped(alreadySucceeded);
+        const msg = alreadySucceeded 
+            ? "오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊" 
+            : "오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉";
+        handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', finalScore, token, user || studentId, msg, true);
     } else {
         setStep(3); 
     }
   };
 
   const handleRewardFinish = (ramen) => {
-    if (token) {
-        // If already logged in, handle final save and move to Praise
-        handleFinish(ramen, score);
-    } else {
-        // Late login flow
-        setPendingRamen(ramen);
+    if (ramen === 'GUEST_LOGIN') {
+        setPendingRamen('AUTO_SAVE_STAMP');
         setStep(-1); 
+    } else {
+        handleFinish(ramen, score);
     }
   };
 
@@ -139,10 +148,14 @@ function App() {
     const activeScore = finalScore || score;
     const activeToken = overrideToken || token;
     const activeUser = overrideUser || user || studentId;
-    let activeRamen = 'STAMP'; // sugar_app은 항상 스탬프 방식
+    let activeRamen = ramen || 'NONE'; 
     
-    if (!overrideMsg && !finalRewardMessage && activeRamen === 'STAMP') {
-        setFinalRewardMessage(`${activeUser}님, 스탬프가 찍혔습니다! 🎉`);
+    if (!overrideMsg && !finalRewardMessage) {
+        if (activeRamen === 'STAMP') {
+            setFinalRewardMessage(`${activeUser}님, 스탬프가 찍혔습니다! 🎉`);
+        } else if (activeRamen === 'NONE') {
+            setFinalRewardMessage(`${activeUser}님, 오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊`);
+        }
     }
 
     try {
@@ -191,7 +204,7 @@ function App() {
 
   return (
     <div className="kiosk-container">
-      {step === -4 && <LevelSelectionStep onSelect={handleLevelSelect} onBack={null} />}
+      {step === -4 && <LevelSelectionStep onSelect={handleLevelSelect} onBack={null} onTest={handleTest} />}
       {step === -2 && <AdminStep token={token} onLogout={handleLogout} />}
       {step === -1 && (
         <AuthStep 
@@ -205,9 +218,11 @@ function App() {
       
       {step === 2 && (
         <RewardStep 
-          user={user || studentId} 
+          user={user || studentId || '게스트'} 
           userType="korean"
           score={score} 
+          alreadyStamped={alreadyStamped}
+          isGuest={!token}
           onFinish={handleRewardFinish} 
         />
       )}
@@ -218,6 +233,7 @@ function App() {
             userType={userType} 
             score={score} 
             token={token}
+            alreadyStamped={alreadyStamped}
             finalRewardMessage={finalRewardMessage} 
             onRestart={handleRestart} 
         />

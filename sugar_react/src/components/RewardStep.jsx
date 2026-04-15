@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 import { SFX } from '../utils/mission';
 import { CheckCircle2, Award } from 'lucide-react';
 
-const RewardStep = ({ user, userType, score, onFinish }) => {
+const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, isGuest = false }) => {
     const [selectedRamen, setSelectedRamen] = useState(null);
     const [stampCount, setStampCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true); // sugar_app은 항상 스탬프 모드
@@ -14,7 +14,8 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
 
     const fetchStampCount = async () => {
         try {
-            const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=korean`, {
+            // DB에 저장된 실제 user_type인 'foreigner'로 조회
+            const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=foreigner`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('sugar_token') || 'GUEST_TOKEN'}` }
             });
             if (res.ok) {
@@ -42,12 +43,13 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
     };
 
     const handleFinish = () => {
-        if (userType === 'foreigner' && !selectedRamen) return alert('라면을 선택해 주세요!');
-        
-        if (userType === 'korean') {
-            onFinish('STAMP');
+        if (isGuest) {
+            onFinish('GUEST_LOGIN');
+        } else if (alreadyStamped) {
+            // 이미 받은 경우 → 저장 없이 바로 완료
+            onFinish('NONE');
         } else {
-            onFinish(selectedRamen.name);
+            onFinish('STAMP');
         }
     };
 
@@ -74,9 +76,13 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
                                 display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', 
                                 maxWidth: '400px', margin: '0 auto' 
                             }}>
-                                {[...Array(10)].map((_, i) => {
-                                    const isStamped = i < stampCount;
-                                    const isNew = i === stampCount - 1; // Assuming stampCount was updated after save
+                            {[...Array(10)].map((_, i) => {
+                                    // isGuest면 아무것도 안 찍힌 상태 (0개),
+                                    // 이미 받은 경우: 기존 스탬프만 표시 (count 동일)
+                                    // 새로 받는 경우: count+1번째 슬롯에 애니메이션 적용
+                                    const displayCount = isGuest ? 0 : (alreadyStamped ? stampCount : stampCount + 1);
+                                    const isStamped = i < displayCount;
+                                    const isNew = !isGuest && !alreadyStamped && i === displayCount - 1;
                                     return (
                                         <div key={i} style={{ 
                                             aspectRatio: '1', borderRadius: '50%', border: '3px dashed #eee',
@@ -101,7 +107,13 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
                                 })}
                             </div>
                         </div>
-                        <p style={{ color: '#666', marginBottom: '20px' }}>오늘 미션 성공으로 스템프가 찍혔습니다! 🎉</p>
+                        <p style={{ color: '#666', marginBottom: '20px' }}>
+                            {isGuest
+                                ? '로그인 하시면 미션 통과 보상(스탬프)이 준비되어 있습니다! 🎁'
+                                : alreadyStamped 
+                                    ? '오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊'
+                                    : '오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉'}
+                        </p>
                     </div>
                 ) : (
                     <div className="ramen-grid">
@@ -117,8 +129,11 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
                 )}
 
                 <div style={{ marginTop: '40px' }}>
-                    <button className="btn-primary" onClick={handleFinish}>
-                        {userType === 'korean' ? '스템프 찍기 (Stamp)' : '선택 완료 (Finish)'}
+                    <button className="btn-primary" onClick={handleFinish}
+                        style={alreadyStamped && !isGuest ? { background: '#ccc', cursor: 'default' } : {}}>
+                        {isGuest 
+                            ? '로그인하고 스탬프 받기' 
+                            : alreadyStamped ? '확인 (이미 오늘 받으셨습니다)' : '스탬프 찍기 (Stamp)'}
                     </button>
                 </div>
             </main>

@@ -35,7 +35,7 @@ const LEVELS = [
     },
 ];
 
-const LevelSelectionStep = ({ onSelect, onBack }) => {
+const LevelSelectionStep = ({ onSelect, onBack, onTest }) => {
     const handleSelect = (level) => {
         SFX.play('click');
         onSelect(level);
@@ -104,7 +104,25 @@ const LevelSelectionStep = ({ onSelect, onBack }) => {
                 ))}
             </div>
 
-
+            {onTest && (
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                        onClick={onTest}
+                        style={{
+                            background: 'transparent',
+                            border: '1.5px dashed #ccc',
+                            color: '#bbb',
+                            borderRadius: '10px',
+                            padding: '8px 24px',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            letterSpacing: '0.05em',
+                        }}
+                    >
+                        🔧 TEST (85점 통과 시뮬레이션)
+                    </button>
+                </div>
+            )}
 
             <style dangerouslySetInnerHTML={{ __html: `
                 .mission-card:hover {

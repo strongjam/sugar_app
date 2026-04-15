@@ -74,12 +74,10 @@ const AuthStep = ({ onAuthSuccess, onBack, userType, pendingRamen }) => {
                             <h2 style={{ 
                                 margin: 0, 
                                 fontSize: '1.4rem', 
-                                color: userType === 'korean' ? '#45b7af' : '#e65a5a',
+                                color: '#e65a5a',
                                 fontWeight: 'bold' 
                             }}>
-                                {userType === 'korean' 
-                                    ? '🎁 로그인 을 하셔야 포인트가 적립됩니다!' 
-                                    : `🍜 로그인을 하시면 선택하신 '${pendingRamen}'을 받아가실 수 있습니다!`}
+                                🎁 로그인을 하시면 미션 통과 보상(스탬프)이 적립됩니다!
                             </h2>
                         </div>
                     )}
