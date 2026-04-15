@@ -139,12 +139,10 @@ function App() {
     const activeScore = finalScore || score;
     const activeToken = overrideToken || token;
     const activeUser = overrideUser || user || studentId;
-    let activeRamen = ramen || 'NONE';
+    let activeRamen = 'STAMP'; // sugar_app은 항상 스탬프 방식
     
-    if (!overrideMsg && !finalRewardMessage) {
-        if (activeRamen !== 'NONE' && activeRamen !== 'STAMP') {
-            setFinalRewardMessage(`${activeUser}님, ${activeRamen} 맛있게 드세요!🎉`);
-        }
+    if (!overrideMsg && !finalRewardMessage && activeRamen === 'STAMP') {
+        setFinalRewardMessage(`${activeUser}님, 스탬프가 찍혔습니다! 🎉`);
     }
 
     try {
@@ -208,7 +206,7 @@ function App() {
       {step === 2 && (
         <RewardStep 
           user={user || studentId} 
-          userType={userType}
+          userType="korean"
           score={score} 
           onFinish={handleRewardFinish} 
         />

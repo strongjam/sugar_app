@@ -6,13 +6,11 @@ import { CheckCircle2, Award } from 'lucide-react';
 const RewardStep = ({ user, userType, score, onFinish }) => {
     const [selectedRamen, setSelectedRamen] = useState(null);
     const [stampCount, setStampCount] = useState(0);
-    const [isLoading, setIsLoading] = useState(userType === 'korean');
+    const [isLoading, setIsLoading] = useState(true); // sugar_app은 항상 스탬프 모드
 
     useEffect(() => {
-        if (userType === 'korean') {
-            fetchStampCount();
-        }
-    }, [userType]);
+        fetchStampCount();
+    }, []);
 
     const fetchStampCount = async () => {
         try {
@@ -21,11 +19,8 @@ const RewardStep = ({ user, userType, score, onFinish }) => {
             });
             if (res.ok) {
                 const data = await res.json();
-                // Count rows with score >= 85 (or just count records if we assume only success reaches here)
-                // Let's assume every success is a stamp. 
-                // We'll count successful previous days/sessions.
                 const count = data.length; 
-                setStampCount(count % 10); // Loop every 10? Or just show up to 10.
+                setStampCount(count % 10);
             }
         } catch (e) {
             console.error('Failed to fetch stamps:', e);

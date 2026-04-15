@@ -14,7 +14,9 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
 
     const formatReference = (ref) => {
         if (!ref) return "";
-        return ref.replace(':', '장 ') + '절';
+        // 시편(Psalms)은 '장' 대신 '편'을 사용
+        const isPsalm = ref.startsWith('시편');
+        return ref.replace(':', isPsalm ? '편 ' : '장 ') + '절';
     };
 
     // Level-based verse selection for foreigner users
