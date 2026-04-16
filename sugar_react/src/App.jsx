@@ -150,7 +150,9 @@ function App() {
     const activeUser = overrideUser || user || studentId;
     let activeRamen = ramen || 'NONE'; 
     
-    if (!overrideMsg && !finalRewardMessage) {
+    if (overrideMsg) {
+        setFinalRewardMessage(overrideMsg);
+    } else if (!finalRewardMessage) {
         if (activeRamen === 'STAMP') {
             setFinalRewardMessage(`${activeUser}님, 스탬프가 찍혔습니다! 🎉`);
         } else if (activeRamen === 'NONE') {
@@ -231,6 +233,7 @@ function App() {
         <PraiseStep 
             user={user || studentId} 
             userType={userType} 
+            userLevel={userLevel}
             score={score} 
             token={token}
             alreadyStamped={alreadyStamped}

@@ -73,8 +73,8 @@ const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, i
                                 <Award size={28} style={{ marginRight: '10px' }} /> 스템프 북 (Stamp Book)
                             </h2>
                             <div style={{ 
-                                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', 
-                                maxWidth: '400px', margin: '0 auto' 
+                                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', 
+                                maxWidth: '500px', margin: '0 auto 40px auto' 
                             }}>
                             {[...Array(10)].map((_, i) => {
                                     // isGuest면 아무것도 안 찍힌 상태 (0개),
@@ -94,12 +94,12 @@ const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, i
                                             {isStamped && (
                                                 <CheckCircle2 
                                                     color="#FF6B6B" 
-                                                    size={32} 
+                                                    size={44} 
                                                     className={isNew ? "animate-pop" : ""} 
                                                 />
                                             )}
                                             <span style={{ 
-                                                position: 'absolute', bottom: '-20px', fontSize: '0.8rem', 
+                                                position: 'absolute', bottom: '-28px', fontSize: '1rem', 
                                                 color: isStamped ? '#FF6B6B' : '#ccc', fontWeight: 700 
                                             }}>{i + 1}</span>
                                         </div>

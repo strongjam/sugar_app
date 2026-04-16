@@ -3,7 +3,7 @@ import { CheckCircle2, Award, Heart, Smile, Star, Crown, Sparkles, History, X, C
 import { BIBLE_VERSES } from '../data/verses';
 import { SFX } from '../utils/mission';
 
-const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestart, alreadyStamped }) => {
+const PraiseStep = ({ user, userType, userLevel = 1, score, token, finalRewardMessage, onRestart, alreadyStamped }) => {
     const [stampCount, setStampCount] = useState(0);
     const [isLoading, setIsLoading] = useState(score >= 85);
     const [showArchive, setShowArchive] = useState(false);
@@ -41,15 +41,26 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
         return ref.replace(':', '장 ') + '절';
     };
 
+    const getVersePool = () => {
+        if (userType !== 'foreigner') return BIBLE_VERSES;
+        const level1 = BIBLE_VERSES.filter(v => v.text.length <= 40);
+        const level2 = BIBLE_VERSES.filter(v => v.text.length > 40 && v.text.length <= 80);
+        const level3 = BIBLE_VERSES.filter(v => v.text.length > 80);
+        if (userLevel >= 3) return level3.length > 0 ? level3 : BIBLE_VERSES;
+        if (userLevel >= 2) return level2.length > 0 ? level2 : BIBLE_VERSES;
+        return level1.length > 0 ? level1 : BIBLE_VERSES;
+    };
+
     const getPastVerses = () => {
         const today = new Date().setHours(0,0,0,0);
         const dayMs = 86400000;
         const past = [];
+        const versePool = getVersePool();
         for (let i = 1; i <= 7; i++) {
             const date = new Date(today - (i * dayMs));
             const isoDate = date.toISOString().split('T')[0];
-            const idx = Math.floor((date.getTime() - new Date(2024,0,1).getTime()) / dayMs) % BIBLE_VERSES.length;
-            past.push({ date: date.toLocaleDateString(), isoDate, ...BIBLE_VERSES[idx], formattedRef: formatReference(BIBLE_VERSES[idx].ref) });
+            const idx = Math.floor((date.getTime() - new Date(2024,0,1).getTime()) / dayMs) % versePool.length;
+            past.push({ date: date.toLocaleDateString(), isoDate, ...versePool[idx], formattedRef: formatReference(versePool[idx].ref) });
         }
         return past;
     };
@@ -105,8 +116,8 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
                                 <Award size={28} style={{ marginRight: '10px' }} /> 스탬프 북 (Stamp Book)
                             </h2>
                             <div style={{ 
-                                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', 
-                                maxWidth: '400px', margin: '0 auto 20px auto' 
+                                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', 
+                                maxWidth: '500px', margin: '0 auto 40px auto' 
                             }}>
                                 {[...Array(10)].map((_, i) => {
                                     const displayCount = stampCount;
@@ -122,10 +133,10 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
                                             position: 'relative'
                                         }}>
                                             {isMarked && (
-                                                <CheckCircle2 color="#FF6B6B" size={32} className={isNew ? "animate-pop" : ""} />
+                                                <CheckCircle2 color="#FF6B6B" size={44} className={isNew ? "animate-pop" : ""} />
                                             )}
                                             <span style={{ 
-                                                position: 'absolute', bottom: '-20px', fontSize: '0.8rem', 
+                                                position: 'absolute', bottom: '-28px', fontSize: '1rem', 
                                                 color: isMarked ? '#FF6B6B' : '#ccc', fontWeight: 700 
                                             }}>{i + 1}</span>
                                         </div>
@@ -144,12 +155,12 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
                     )}
                     
                     {score >= 85 && (
-                        <>
-                            <div className="score-badge" style={{ fontSize: '2.5rem', padding: '10px 25px', margin: '20px auto', width: 'fit-content' }}>
+                        <div style={{ marginTop: '20px' }}>
+                            <div className="score-badge" style={{ fontSize: '2.5rem', padding: '10px 25px', margin: '0 auto 20px auto', width: 'fit-content' }}>
                                 {score}점
                             </div>
                             <p style={{ color: '#666', margin: 0 }}>말씀을 암송하는 당신의 모습이 참 아름답습니다.</p>
-                        </>
+                        </div>
                     )}
                 </div>
 
