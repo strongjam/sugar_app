@@ -28,6 +28,26 @@ export const SFX = {
 let speakTimeout = null;
 let lastUtterance = null;
 
+// Helper to convert digits to Sino-Korean text (e.g. 55 -> 오십오)
+// Essential for preventing TTS engines from reading chapters/verses as countables (e.g. 쉰다섯)
+function numberToSinoKorean(n) {
+    const units = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
+    const positions = ["", "십", "백", "천"];
+    if (n === 0) return "영";
+    let result = "";
+    let strNum = n.toString();
+    for (let i = 0; i < strNum.length; i++) {
+        let digit = parseInt(strNum[i]);
+        let pos = strNum.length - 1 - i;
+        if (digit !== 0) {
+            // Skill '일' (one) for ten/hundred/thousand places in Korean (e.g. 10 is '십', not '일십')
+            if (digit === 1 && pos > 0) result += positions[pos];
+            else result += units[digit] + positions[pos];
+        }
+    }
+    return result;
+}
+
 export async function speak(textOrSegments, setWaveActive, callback) {
     if (!window.speechSynthesis) return;
 
@@ -38,7 +58,7 @@ export async function speak(textOrSegments, setWaveActive, callback) {
         speakTimeout = null;
     }
 
-    // 2. Normalize and Clean Segments
+    // 2. Normalize, Clean, and Convert Numbers to Text
     let rawSegments = Array.isArray(textOrSegments) ? textOrSegments : [textOrSegments];
     
     // If it's a single string with brackets, try to split it once (Backward compatibility)
@@ -51,9 +71,13 @@ export async function speak(textOrSegments, setWaveActive, callback) {
         ];
     }
 
-    // CLEANING: Remove brackets [] from spoken text so the engine reads them naturally
+    // CLEANING and DIGIT CONVERSION
     const segments = rawSegments
-        .map(s => (s || "").toString().replace(/[\[\]]/g, '').trim())
+        .map(s => {
+            let clean = (s || "").toString().replace(/[\[\]]/g, '').trim();
+            // Convert any digits (e.g. "55") to Korean text ("오십오")
+            return clean.replace(/\d+/g, (m) => numberToSinoKorean(parseInt(m)));
+        })
         .filter(s => s.length > 0);
 
     // 3. Sequential Execution
