@@ -171,7 +171,7 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
                                     transition: 'all 0.2s ease',
                                     touchAction: 'manipulation'
                                 }}
-                                onClick={() => speak(fullTargetText, setIsWaveActive)}>
+                                onClick={() => speak([displayRef, displayText || ""], setIsWaveActive)}>
                             <Volume2 size={24} color="#636e72" /> 
                             말씀 듣기 (Listen)
                         </button>

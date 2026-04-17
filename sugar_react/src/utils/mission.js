@@ -24,64 +24,90 @@ export const SFX = {
     }
 };
 
-// Persistent reference to prevent garbage collection (Crucial for Android Chrome)
+// Persistent timer for pauses
+let speakTimeout = null;
 let lastUtterance = null;
 
-export function speak(text, setWaveActive, callback) {
+export async function speak(textOrSegments, setWaveActive, callback) {
     if (!window.speechSynthesis) return;
 
-    // 1. Force clear the internal queue immediately
+    // 1. Queue Reset
     window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
+    if (speakTimeout) {
+        clearTimeout(speakTimeout);
+        speakTimeout = null;
+    }
 
-    // 2. Play a lightweight click SFX (This counts as a user gesture for unlocking audio)
-    SFX.play('click');
-
-    // 3. Create a fresh utterance and store it in a persistent variable
-    const utterance = new SpeechSynthesisUtterance(text);
-    lastUtterance = utterance; // Protect from GC
-
-    utterance.lang = 'ko-KR';
-    utterance.rate = 0.9;
+    // 2. Normalize and Clean Segments
+    let rawSegments = Array.isArray(textOrSegments) ? textOrSegments : [textOrSegments];
     
-    // Watchdog timer: if it fails to start, it's jammed
-    let started = false;
-    const watchdog = setTimeout(() => {
-        if (!started) {
-            console.warn("Speech synthesis failed to trigger 'onstart' (Android Queue Jam)");
-            if (setWaveActive) setWaveActive(false);
-            window.speechSynthesis.resume(); // Try one more nudge
-        }
-    }, 2000);
+    // If it's a single string with brackets, try to split it once (Backward compatibility)
+    if (rawSegments.length === 1 && typeof rawSegments[0] === 'string' && rawSegments[0].includes(']')) {
+        const text = rawSegments[0];
+        const splitIdx = text.indexOf(']');
+        rawSegments = [
+            text.substring(0, splitIdx + 1),
+            text.substring(splitIdx + 1).trim()
+        ];
+    }
 
-    // 4. Attach all listeners BEFORE calling speak
-    utterance.onstart = () => {
-        started = true;
-        clearTimeout(watchdog);
+    // CLEANING: Remove brackets [] from spoken text so the engine reads them naturally
+    const segments = rawSegments
+        .map(s => (s || "").toString().replace(/[\[\]]/g, '').trim())
+        .filter(s => s.length > 0);
+
+    // 3. Sequential Execution
+    try {
+        // Multi-stage breathing room for the engine
+        await new Promise(r => { speakTimeout = setTimeout(r, 300); });
+        window.speechSynthesis.resume();
+
         if (setWaveActive) setWaveActive(true);
-    };
+        SFX.play('click');
 
-    utterance.onend = () => {
-        clearTimeout(watchdog);
+        for (let i = 0; i < segments.length; i++) {
+            await new Promise((resolve) => {
+                const utterance = new SpeechSynthesisUtterance(segments[i]);
+                lastUtterance = utterance;
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.75; // Slower speed for clarity
+
+                utterance.onend = () => { resolve(); };
+                utterance.onerror = (e) => { 
+                    console.error("TTS Segment Error:", e);
+                    resolve(); // Continue anyway
+                };
+
+                window.speechSynthesis.speak(utterance);
+                
+                // Watchdog to prevent engine sleep
+                const watchdog = setInterval(() => {
+                    if (window.speechSynthesis.speaking) window.speechSynthesis.resume();
+                    else clearInterval(watchdog);
+                }, 1000);
+            });
+
+            // 4. THE 2-SECOND PAUSE (Between segments only)
+            if (i < segments.length - 1) {
+                await new Promise(r => { speakTimeout = setTimeout(r, 1000); });
+            }
+        }
+    } catch (err) {
+        console.error("TTS Universal Error:", err);
+    } finally {
         if (setWaveActive) setWaveActive(false);
-        lastUtterance = null; // Release memory
         if (callback) callback();
-    };
-
-    utterance.onerror = (event) => {
-        console.error("Speech Synthesis Error:", event.error);
-        clearTimeout(watchdog);
-        if (setWaveActive) setWaveActive(false);
         lastUtterance = null;
-    };
-
-    // 5. Final synchronous call to speak
-    window.speechSynthesis.speak(utterance);
+    }
 }
 
 export function stopSpeak() {
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
+    }
+    if (speakTimeout) {
+        clearTimeout(speakTimeout);
+        speakTimeout = null;
     }
 }
 
