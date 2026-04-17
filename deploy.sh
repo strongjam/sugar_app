@@ -28,8 +28,13 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 cd "$FRONTEND_DIR"
 npm run build
+
+# [Cache-Bust] index.html에 유니크한 빌드 타임스탬프 주입 (강력한 캐시 방지)
+BUILD_TIME=$(date '+%Y%m%d_%H%M%S')
+sed -i '' "s/<\/title>/<\/title><!-- Build: $BUILD_TIME -->/" dist/index.html
+
 cd "$SCRIPT_DIR"
-echo "✅ Build complete."
+echo "✅ Build complete. (Version: $BUILD_TIME)"
 
 # 2. 서버 디렉토리 생성 및 권한 설정
 echo "[2/5] Preparing remote directory..."
@@ -56,17 +61,15 @@ server {
     listen 80;
     server_name $DOMAIN;
 
-    location = /index.html {
-        root $REMOTE_PATH;
-        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
-        add_header Pragma "no-cache";
-        expires off;
-    }
-
     location / {
         root $REMOTE_PATH;
         index index.html;
         try_files \$uri \$uri/ /index.html;
+        
+        # 강력한 캐시 방지 헤더 (모든 진입점에 적용)
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+        add_header Pragma "no-cache";
+        expires off;
     }
 
     location /api {

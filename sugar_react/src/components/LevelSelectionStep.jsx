@@ -83,9 +83,9 @@ const LevelSelectionStep = ({ onSelect, onBack, onTest }) => {
                             {icon}
                         </div>
                         <div style={{ flex: 1, textAlign: 'left' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <div className="level-title-container">
                                 <span style={{ fontSize: '1.6rem', fontWeight: '800', color }}>Level {level}</span>
-                                <span style={{
+                                <span className="level-badge" style={{
                                     background: color,
                                     color: 'white',
                                     borderRadius: '20px',
@@ -123,13 +123,6 @@ const LevelSelectionStep = ({ onSelect, onBack, onTest }) => {
                     </button>
                 </div>
             )}
-
-            <style dangerouslySetInnerHTML={{ __html: `
-                .mission-card:hover {
-                    transform: translateY(-4px);
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                }
-            `}} />
         </div>
     );
 };

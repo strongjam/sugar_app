@@ -136,16 +136,46 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
             </header>
 
             <main>
-                <div className={`mission-card ${isReciting ? 'mosaic' : ''}`}>
+                <div className="mission-card" style={{ position: 'relative', overflow: 'visible', paddingBottom: '60px' }}>
                     <p className={`verse-text ${isReciting ? 'mosaic' : ''}`}>
                         <span style={{ color: '#FF6B6B', display: 'block', fontSize: '1.3rem', fontWeight: '700', marginBottom: '10px' }}>[{displayRef}]</span>
                         "{displayText}"
                     </p>
-                    <button id="btn-listen" className="num-btn special" 
-                            style={{ width: '100%', height: '50px', marginTop: '10px' }}
-                            onClick={() => speak(fullTargetText, setIsWaveActive)}>
-                        <Volume2 size={20} style={{ marginRight: '8px' }} /> 말씀 듣기 (Listen)
-                    </button>
+                    
+                    {/* Floating Glassmorphic Listen Button */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        bottom: '15px', 
+                        left: '20px', 
+                        right: '20px', 
+                        zIndex: 200 
+                    }}>
+                        <button id="btn-listen" 
+                                style={{ 
+                                    width: '100%', 
+                                    height: '48px', 
+                                    background: 'rgba(245, 246, 247, 0.95)', 
+                                    backdropFilter: 'blur(10px)',
+                                    WebkitBackdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(0, 0, 0, 0.05)',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                    color: '#2d3436',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '700',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    touchAction: 'manipulation'
+                                }}
+                                onClick={() => speak(fullTargetText, setIsWaveActive)}>
+                            <Volume2 size={24} color="#636e72" /> 
+                            말씀 듣기 (Listen)
+                        </button>
+                    </div>
                 </div>
 
                 <div className={`voice-wave ${isReciting || isWaveActive ? 'active' : ''}`}>

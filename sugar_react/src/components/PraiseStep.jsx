@@ -16,6 +16,9 @@ const PraiseStep = ({ user, userType, userLevel = 1, score, token, finalRewardMe
     }, [score]);
 
     const fetchStampCount = async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         try {
             const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=foreigner`, {
                 headers: { 
@@ -23,22 +26,27 @@ const PraiseStep = ({ user, userType, userLevel = 1, score, token, finalRewardMe
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
                     'Pragma': 'no-cache',
                     'Expires': '0'
-                }
+                },
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
-                setStampCount(data.length % 10 || 0);
+                const count = Array.isArray(data) ? data.length : 0;
+                setStampCount(count % 10);
             }
         } catch (e) {
             console.error('Failed to fetch stamps:', e);
         } finally {
             setIsLoading(false);
+            clearTimeout(timeoutId);
         }
     };
 
     const formatReference = (ref) => {
         if (!ref) return "";
-        return ref.replace(':', '장 ') + '절';
+        const isPsalm = ref.startsWith('시편');
+        return ref.replace(':', isPsalm ? '편 ' : '장 ') + '절';
     };
 
     const getVersePool = () => {
@@ -55,12 +63,24 @@ const PraiseStep = ({ user, userType, userLevel = 1, score, token, finalRewardMe
         const today = new Date().setHours(0,0,0,0);
         const dayMs = 86400000;
         const past = [];
+        const referenceDate = new Date(2024, 0, 1).getTime();
         const versePool = getVersePool();
+        
         for (let i = 1; i <= 7; i++) {
             const date = new Date(today - (i * dayMs));
-            const isoDate = date.toISOString().split('T')[0];
-            const idx = Math.floor((date.getTime() - new Date(2024,0,1).getTime()) / dayMs) % versePool.length;
-            past.push({ date: date.toLocaleDateString(), isoDate, ...versePool[idx], formattedRef: formatReference(versePool[idx].ref) });
+            const isoDate = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+            const diffDays = Math.floor((date.getTime() - referenceDate) / dayMs);
+            const idx = Math.abs(diffDays) % versePool.length;
+            const verse = versePool[idx];
+            
+            if (verse) {
+                past.push({ 
+                    date: isoDate, 
+                    isoDate, 
+                    ...verse, 
+                    formattedRef: formatReference(verse.ref) 
+                });
+            }
         }
         return past;
     };

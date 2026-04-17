@@ -31,19 +31,26 @@ function App() {
   };
 
   const handleTest = async () => {
-    setUserLevel(1);
-    setScore(90);
-    if (!token) {
-        setAlreadyStamped(false);
-        setStep(2);
-        return;
+    console.log("Starting TEST simulation...");
+    try {
+        setUserLevel(1);
+        setScore(90);
+        
+        // Pure simulation: skip all API calls for the TEST button to ensure reliability
+        if (!token) {
+            console.log("TEST: Guest mode -> Step 2");
+            setAlreadyStamped(false);
+            setStep(2);
+        } else {
+            console.log("TEST: Logged-in mode -> Step 3");
+            setAlreadyStamped(false); // Assume fresh stamp for test
+            setFinalRewardMessage("(TEST) 성공 시뮬레이션입니다! 🎉");
+            setStep(3);
+        }
+    } catch (e) {
+        console.error("TEST Simulation Error:", e);
+        setStep(3);
     }
-    const alreadySucceeded = await checkAlreadySucceeded(token, userType);
-    setAlreadyStamped(alreadySucceeded);
-    const msg = alreadySucceeded 
-        ? "오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊" 
-        : "오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉";
-    handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', 90, token, user || studentId, msg, true);
   };
 
   useEffect(() => {
@@ -226,6 +233,7 @@ function App() {
           alreadyStamped={alreadyStamped}
           isGuest={!token}
           onFinish={handleRewardFinish} 
+          onBack={() => setStep(-4)}
         />
       )}
 

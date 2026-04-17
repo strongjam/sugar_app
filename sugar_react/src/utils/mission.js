@@ -24,17 +24,58 @@ export const SFX = {
     }
 };
 
+// Persistent reference to prevent garbage collection (Crucial for Android Chrome)
+let lastUtterance = null;
+
 export function speak(text, setWaveActive, callback) {
     if (!window.speechSynthesis) return;
+
+    // 1. Force clear the internal queue immediately
     window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+
+    // 2. Play a lightweight click SFX (This counts as a user gesture for unlocking audio)
+    SFX.play('click');
+
+    // 3. Create a fresh utterance and store it in a persistent variable
     const utterance = new SpeechSynthesisUtterance(text);
+    lastUtterance = utterance; // Protect from GC
+
     utterance.lang = 'ko-KR';
-    utterance.rate = 0.85;
-    if (setWaveActive) setWaveActive(true);
+    utterance.rate = 0.9;
+    
+    // Watchdog timer: if it fails to start, it's jammed
+    let started = false;
+    const watchdog = setTimeout(() => {
+        if (!started) {
+            console.warn("Speech synthesis failed to trigger 'onstart' (Android Queue Jam)");
+            if (setWaveActive) setWaveActive(false);
+            window.speechSynthesis.resume(); // Try one more nudge
+        }
+    }, 2000);
+
+    // 4. Attach all listeners BEFORE calling speak
+    utterance.onstart = () => {
+        started = true;
+        clearTimeout(watchdog);
+        if (setWaveActive) setWaveActive(true);
+    };
+
     utterance.onend = () => {
+        clearTimeout(watchdog);
         if (setWaveActive) setWaveActive(false);
+        lastUtterance = null; // Release memory
         if (callback) callback();
     };
+
+    utterance.onerror = (event) => {
+        console.error("Speech Synthesis Error:", event.error);
+        clearTimeout(watchdog);
+        if (setWaveActive) setWaveActive(false);
+        lastUtterance = null;
+    };
+
+    // 5. Final synchronous call to speak
     window.speechSynthesis.speak(utterance);
 }
 

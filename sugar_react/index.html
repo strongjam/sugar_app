@@ -12,6 +12,23 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Speech Synthesis Warmup for mobile browsers
+      const warmupTTS = () => {
+        if (window.speechSynthesis) {
+          // Clear any stuck state
+          window.speechSynthesis.cancel();
+          // Short actual character to fire the engine
+          const utterance = new SpeechSynthesisUtterance('.');
+          utterance.volume = 0;
+          window.speechSynthesis.speak(utterance);
+        }
+        window.removeEventListener('click', warmupTTS);
+        window.removeEventListener('touchstart', warmupTTS);
+      };
+      window.addEventListener('click', warmupTTS);
+      window.addEventListener('touchstart', warmupTTS);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

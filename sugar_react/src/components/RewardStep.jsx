@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { SFX } from '../utils/mission';
-import { CheckCircle2, Award } from 'lucide-react';
+import { CheckCircle2, Award, ArrowLeft } from 'lucide-react';
 
-const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, isGuest = false }) => {
+const RewardStep = ({ user, userType, score, onFinish, onBack, alreadyStamped = false, isGuest = false }) => {
     const [selectedRamen, setSelectedRamen] = useState(null);
     const [stampCount, setStampCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true); // sugar_app은 항상 스탬프 모드
@@ -13,20 +13,25 @@ const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, i
     }, []);
 
     const fetchStampCount = async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         try {
-            // DB에 저장된 실제 user_type인 'foreigner'로 조회
             const res = await fetch(`https://logos.app.koreanok.com/api/records/my-summary?user_type=foreigner`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('sugar_token') || 'GUEST_TOKEN'}` }
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('sugar_token') || 'GUEST_TOKEN'}` },
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
-                const count = data.length; 
+                const count = Array.isArray(data) ? data.length : 0; 
                 setStampCount(count % 10);
             }
         } catch (e) {
             console.error('Failed to fetch stamps:', e);
         } finally {
             setIsLoading(false);
+            clearTimeout(timeoutId);
         }
     };
 
@@ -128,13 +133,22 @@ const RewardStep = ({ user, userType, score, onFinish, alreadyStamped = false, i
                     </div>
                 )}
 
-                <div style={{ marginTop: '40px' }}>
+                <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <button className="btn-primary" onClick={handleFinish}
                         style={alreadyStamped && !isGuest ? { background: '#ccc', cursor: 'default' } : {}}>
                         {isGuest 
                             ? '로그인하고 스탬프 받기' 
                             : alreadyStamped ? '확인 (이미 오늘 받으셨습니다)' : '스탬프 찍기 (Stamp)'}
                     </button>
+                    {onBack && (
+                        <div style={{ marginTop: '30px', textAlign: 'left' }}>
+                            <button className="num-btn special" 
+                                    style={{ width: '180px', height: '55px' }} 
+                                    onClick={onBack}>
+                                <ArrowLeft size={18} style={{ marginRight: '8px' }} /> 이전으로 (Back)
+                            </button>
+                        </div>
+                    )}
                 </div>
             </main>
 
