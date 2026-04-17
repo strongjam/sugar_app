@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Mic, Square, Volume2, ArrowLeft, X } from 'lucide-react';
-import { SFX, speak, getSimilarityScore } from '../utils/mission';
+import { SFX, speak, stopSpeak, getSimilarityScore } from '../utils/mission';
 import { BIBLE_VERSES } from '../data/verses';
 
 const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
@@ -219,7 +219,7 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
                 <div style={{ marginTop: '30px', textAlign: 'left' }}>
                     <button className="num-btn special" 
                             style={{ width: '180px', height: '55px' }} 
-                            onClick={onBack}>
+                            onClick={() => { stopSpeak(); onBack(); }}>
                         <ArrowLeft size={18} style={{ marginRight: '8px' }} /> 이전으로 (Back)
                     </button>
                 </div>

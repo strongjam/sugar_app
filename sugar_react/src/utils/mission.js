@@ -79,6 +79,12 @@ export function speak(text, setWaveActive, callback) {
     window.speechSynthesis.speak(utterance);
 }
 
+export function stopSpeak() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+}
+
 export function getSimilarityScore(str1, str2) {
     const normalize = (s) => s.replace(/\s+/g, '').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()"'“ ”‘ ’·]/g, "").trim();
     const s1 = normalize(str1);
