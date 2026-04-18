@@ -23,7 +23,7 @@ const SelectionStep = ({ onSelect }) => {
                         <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,107,107,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                             <Globe size={40} color="#FF6B6B" />
                         </div>
-                        <h2 style={{ fontSize: '1.6rem', marginBottom: '10px' }}>Foreign Student</h2>
+                        <h2 style={{ fontSize: '1.6rem', marginBottom: '10px' }}>일반 사람</h2>
                         <p style={{ color: '#888', textAlign: 'center', fontSize: '0.9rem', lineHeight: '1.4' }}>
                             미션 수행 및 보상 받기<br/>
                             <span style={{ fontSize: '0.75rem' }}>Login Required for Rewards</span>
@@ -41,7 +41,7 @@ const SelectionStep = ({ onSelect }) => {
                         <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(78,205,196,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                             <User size={40} color="#4ECDC4" />
                         </div>
-                        <h2 style={{ fontSize: '1.6rem', marginBottom: '10px' }}>Korean</h2>
+                        <h2 style={{ fontSize: '1.6rem', marginBottom: '10px' }}>한국인</h2>
                         <p style={{ color: '#888', textAlign: 'center', fontSize: '0.9rem', lineHeight: '1.4' }}>
                             오늘의 말씀 암송하기<br/>
                             <span style={{ fontSize: '0.75rem' }}>Enjoy Recital without Rewards</span>

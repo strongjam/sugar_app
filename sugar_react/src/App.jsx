@@ -118,7 +118,7 @@ function App() {
     }
   };
 
-  const handleRecitalNext = async (finalScore) => {
+  const handleRecitalNext = async (finalScore, verseRef) => {
     setScore(finalScore);
     if (finalScore >= 85) {
         if (!token) {
@@ -132,9 +132,10 @@ function App() {
         const msg = alreadySucceeded 
             ? "오늘은 이미 스탬프를 받으셨습니다. 내일 다시 도전해 주세요! 😊" 
             : "오늘 미션 성공으로 스탬프가 찍혔습니다! 🎉";
-        handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', finalScore, token, user || studentId, msg, true);
+        handleFinish(alreadySucceeded ? 'NONE' : 'STAMP', finalScore, token, user || studentId, msg, true, userLevel, verseRef);
     } else {
-        setStep(3); 
+        // Even if failed, we save the record for history
+        handleFinish('NONE', finalScore, token, user || studentId, null, true, userLevel, verseRef);
     }
   };
 
@@ -147,7 +148,7 @@ function App() {
     }
   };
 
-  const handleFinish = async (ramen, finalScore, overrideToken, overrideUser, overrideMsg, shouldRedirect = true) => {
+  const handleFinish = async (ramen, finalScore, overrideToken, overrideUser, overrideMsg, shouldRedirect = true, level, verseRef) => {
     if (isSubmitting.current) return;
     isSubmitting.current = true;
     setIsSaving(true);
@@ -155,6 +156,7 @@ function App() {
     const activeScore = finalScore || score;
     const activeToken = overrideToken || token;
     const activeUser = overrideUser || user || studentId;
+    const activeLevel = level || userLevel;
     let activeRamen = ramen || 'NONE'; 
     
     if (overrideMsg) {
@@ -178,7 +180,9 @@ function App() {
           score: activeScore, 
           ramen_type: activeRamen, 
           student_id: activeUser || (userType === 'korean' ? 'KOREAN_GUEST' : 'GUEST'),
-          user_type: userType 
+          user_type: userType,
+          level: activeLevel,
+          verse_ref: verseRef
         })
       });
     } catch (e) {

@@ -33,8 +33,21 @@ db.serialize(() => {
         score INTEGER,
         ramen_type TEXT,
         user_type TEXT,
+        level INTEGER,
+        verse_ref TEXT,
         created_at TEXT
     )`);
+
+    // Migration for existing records table
+    db.all("PRAGMA table_info(records)", (err, columns) => {
+        if (err || !columns) return;
+        const hasLevel = columns.some(c => c.name === 'level');
+        if (!hasLevel) {
+            console.log("Migration: Adding level and verse_ref to records...");
+            db.run("ALTER TABLE records ADD COLUMN level INTEGER");
+            db.run("ALTER TABLE records ADD COLUMN verse_ref TEXT");
+        }
+    });
 
     // Step 2: Migration to composite PK (username, user_type) if needed
     db.all("PRAGMA table_info(users)", (err, columns) => {
@@ -127,12 +140,12 @@ app.post('/api/auth/login', (req, res) => {
     });
 });
 
-// Save Record (Score & Ramen)
+// Save Record (Score & Ramen & Level)
 app.post('/api/records', authenticateToken, (req, res) => {
-    const { score, ramen_type, student_id, user_type } = req.body;
+    const { score, ramen_type, student_id, user_type, level, verse_ref } = req.body;
     const username = req.user.username === 'GUEST' ? null : req.user.username;
 
-    db.run("INSERT INTO records (username, student_id, score, ramen_type, user_type, created_at) VALUES (?, ?, ?, ?, ?, DATETIME('now', 'localtime'))", [username, student_id, score, ramen_type, user_type], (err) => {
+    db.run("INSERT INTO records (username, student_id, score, ramen_type, user_type, level, verse_ref, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, DATETIME('now', 'localtime'))", [username, student_id, score, ramen_type, user_type, level, verse_ref], (err) => {
         if (err) return res.status(500).json({ error: '기록 저장 실패' });
         res.json({ message: '기록이 저장되었습니다.' });
     });
@@ -195,6 +208,24 @@ app.get('/api/admin/users', authenticateToken, (req, res) => {
     `;
     db.all(query, [], (err, rows) => {
         if (err) return res.status(500).json({ error: '회원 조회 실패' });
+        res.json(rows);
+    });
+});
+
+// Admin: Get specific user's successful verses
+app.get('/api/admin/users/:username/verses', authenticateToken, (req, res) => {
+    if (!req.user.isAdmin) return res.sendStatus(403);
+    const { username } = req.params;
+    const { user_type } = req.query;
+
+    const query = `
+        SELECT level, verse_ref, score, created_at
+        FROM records
+        WHERE (username = ? OR student_id = ?) AND user_type = ? AND score >= 85
+        ORDER BY created_at DESC
+    `;
+    db.all(query, [username, username, user_type], (err, rows) => {
+        if (err) return res.status(500).json({ error: '구절 조회 실패' });
         res.json(rows);
     });
 });

@@ -207,7 +207,7 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
                     
                     <button className="btn-primary btn-secondary btn-check" 
                             disabled={score === null}
-                            onClick={() => onNext(score)}>
+                            onClick={() => onNext(score, dailyVerse.ref)}>
                         {userType === 'korean' 
                             ? (score !== null ? "결과 저장하고 완료하기" : "암송 후 완료 가능")
                             : (score >= 85 ? "암송 통과! 보상받기" : "결과 저장하고 완료하기 (85점 미만)")}
